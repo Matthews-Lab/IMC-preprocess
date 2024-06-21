@@ -1,7 +1,16 @@
-img=newArray("add","image","names","here","without",".tiff");
+// This macro should be used as a framework to preprocess images.
+// Change the thresholding methods depending on what works best.
+// I have provided an example where sequential thresholding works well.
+// If this is not necessary, remove the later for loops.
+
+path=getDirectory("/Volumes/sb3222/home/Exp1/img/");
+print(path)
+// Get the list of files in the current directory
+img = getFileList(path);
+
 for(j = 0; j < img.length; j++) {
-	open("/path/to/images/"+ img[j] +".tiff");
-selectImage(img[j] +".tiff");
+	open(path + img[j]);
+selectImage(img[j]);
 run("Despeckle", "stack");
 
 setBatchMode("hide");
@@ -18,7 +27,7 @@ for (i = 1; i <= nSlices; i++) {
         setAutoThreshold("Default");
     } else if (i == 3) {
         // Set threshold for slice 3 (CALB)
-        setThreshold(0, 2);
+        setAutoThreshold("Moments");
     } else if (i == 4) {
         // Set threshold for slice 4 (PVALB)
         setThreshold(0, 1);
@@ -66,6 +75,52 @@ resetThreshold;
 // Restore normal batch mode
 setBatchMode("exit and display");
 
-saveAs("Tiff", "/path/to/output/folder/" + img[j] + ".tiff");
+// Despeckle Certain Slices
+for (i = 1; i <= nSlices; i++) {
+    setSlice(i);
+    if (i == 2) {
+    	run("Despeckle", "slice");
+    } else if (i == 3) {
+    	run("Despeckle", "slice");
+    } else if (i == 6) {
+    	run("Despeckle", "slice");
+    } else if (i == 8) {
+    	run("Despeckle", "slice");
+    } else if (i == 10) {
+    	run("Despeckle", "slice");
+    }
+}
+
+// Further thresholding CALB, PVALB and GAD1
+for (i = 1; i <= nSlices; i++) {
+    setSlice(i);
+    if (i == 3) {
+    	setAutoThreshold("RenyiEntropy");
+    run("Create Selection");
+    if (selectionType() != -1) {
+        run("Set...", "value=0");
+    }
+    } else if (i == 4) {
+    	setAutoThreshold("RenyiEntropy");
+    	// Create selection
+    run("Create Selection");
+     if (selectionType() != -1) {
+        run("Set...", "value=0");
+    }
+    } else if (i == 9) {
+    	setAutoThreshold("Moments");
+    	// Create selection
+    run("Create Selection");
+     if (selectionType() != -1) {
+        run("Set...", "value=0");
+    }
+    }
+    
+    // Clear selection
+    run("Select None");
+}
+
+
+saveAs("Tiff", "/Volumes/sb3222/home/Exp1/processed_img/" + img[j]);
 run("Close All");
 }
